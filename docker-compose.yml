@@ -1,0 +1,24 @@
+# Local run of the demo app — mirrors the zs.yaml topology (db + api on a private
+# network, api reaching Postgres by the service name `db`). Use this to try the app
+# before deploying it to the ZeroServer Community Cloud.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./api
+    environment:
+      - DATABASE_URL=postgres://postgres:secret@db:5432/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

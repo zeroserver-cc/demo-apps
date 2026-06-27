@@ -1,0 +1,25 @@
+# zs.yaml — manifesto da aplicação demo para a ZeroServer Community Cloud.
+# Dois serviços: db (Postgres) + api (Node). A api é exposed e recebe a URL pública.
+# Referência completa: documentation/MVP/examples/zs-app-config-reference.md
+app: zsc-app-demo
+services:
+  - name: db
+    image: postgres:16-alpine
+    env:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=app
+    volumes:
+      # Volume nomeado: sem replicação no MVP, não use para dados críticos.
+      - pgdata:/var/lib/postgresql/data
+
+  - name: api
+    # Publique sua imagem num registry e troque por ela (ex.: ghcr.io/<org>/zsc-app-demo-api:1.0).
+    image: ghcr.io/zeroserver-cc/zsc-app-demo-api:1.0
+    env:
+      # A api fala com o Postgres pelo nome do serviço `db` na rede privada da app.
+      - DATABASE_URL=postgres://postgres:secret@db:5432/app
+    ports:
+      - "3000"
+    dependsOn:
+      - db
+    exposed: true
