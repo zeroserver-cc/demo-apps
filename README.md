@@ -32,16 +32,28 @@ proving the API ↔ database connection over the private network.
 
 ## Deploy it to the ZS
 
-1. **Build and publish the API image** to a registry (GHCR, Docker Hub, …):
+0. **Install the CLI** (standalone binary, no Node required):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/zeroserver-cc/zsc-cli/main/install.sh | sh
+   ```
+
+1. **Build and publish the API image** to a registry (GHCR, Docker Hub, …). The ZS
+   runs your prebuilt image; it does not build from source in the MVP:
 
    ```bash
    docker build -t ghcr.io/<your-org>/zsc-app-demo-api:1.0 ./api
    docker push ghcr.io/<your-org>/zsc-app-demo-api:1.0
    ```
 
-2. **Point `zs.yaml` at your image** (edit the `api.image` field).
+   Make the image **public** so the ZS can pull it without credentials. (Private
+   images are supported from Sprint 11 via `zs registry login`.)
 
-3. **Deploy** with the ZS CLI:
+2. **Point `zs.yaml` at your image** (edit the `api.image` field). The bundled
+   value `ghcr.io/zeroserver-cc/zsc-app-demo-api:1.0` is the published demo image.
+
+3. **Deploy** with the ZS CLI — `zs deploy` reads `zs.yaml` and brings up both
+   services (`db` + `api`):
 
    ```bash
    zs login
@@ -55,6 +67,9 @@ proving the API ↔ database connection over the private network.
 
 The `db` service starts before `api` (`dependsOn`), and the API retries its
 database connection on startup, so a cold deploy comes up cleanly.
+
+> Deploying a single container instead of a full `zs.yaml`? Use the shortcut:
+> `zs deploy <image> --port <port>`.
 
 ## The manifest (`zs.yaml`)
 
