@@ -2,6 +2,16 @@
 # Dois serviços: db (Postgres) + api (Node). A api é exposed e recebe a URL pública.
 # Referência completa: documentation/MVP/examples/zs-app-config-reference.md
 app: zsc-app-demo
+
+# Descomente e ajuste se sua aplicação precisar de recursos de IA/ML no node.
+# Exemplo: app de geração de imagem que exige GPU.
+# ai:
+#   gpu: true
+#   image: true
+#   llm: false
+#   video: false
+#   audio: false
+
 services:
   - name: db
     image: postgres:16-alpine
