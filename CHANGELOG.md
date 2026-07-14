@@ -8,4 +8,5 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### Adicionado
+- Exemplo comentado da seção `ai` no `zs.yaml` para documentar como apps de IA/ML declaram recursos necessários ao scheduler.
 - Criação do arquivo `CHANGELOG.md` para rastreamento de mudanças.
