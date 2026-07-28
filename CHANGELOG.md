@@ -14,3 +14,4 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Corrigido
 - README e `zs.yaml` apontavam para um caminho do repositório privado de documentação (`documentation/MVP/examples/zs-app-config-reference.md`), inacessível a quem clona só este repo; agora apontam para `docs/zs-yaml-reference.md`.
+- Sintaxe dos comandos no README: `zs logs`/`zs stop` recebem o `<instance-id>` (exibido no output do `zs deploy` e no `zs list`), não o nome do app; referência documenta a sintaxe real de `zs domain` (`add <domain> --app <name>`, `verify <domain>`, `remove <domain>`).

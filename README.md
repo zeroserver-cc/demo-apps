@@ -58,11 +58,11 @@ proving the API ↔ database connection over the private network.
    ```bash
    zs login
    zs deploy           # reads zs.yaml, creates the app and deploys it
-   zs list             # follow until RUNNING; shows the public URL
+   zs list             # follow until RUNNING; shows the public URL and instance ID
    #   → https://app-xxx.apps.zeroserver.cc
    curl https://app-xxx.apps.zeroserver.cc/
-   zs logs zsc-app-demo
-   zs stop zsc-app-demo
+   zs logs <instance-id>   # instance ID from the deploy output or zs list
+   zs stop <instance-id>
    ```
 
 The `db` service starts before `api` (`dependsOn`), and the API retries its

@@ -23,7 +23,7 @@ Aplicacao de exemplo e ponto de partida para Developers na ZeroServer Community 
 ## Comandos
 
 - Local: `docker compose up --build`
-- Deploy na ZSC: `zs login`, `zs deploy`, `zs list`, `zs logs zsc-app-demo`, `zs stop zsc-app-demo`
+- Deploy na ZSC: `zs login`, `zs deploy`, `zs list`, `zs logs <instance-id>`, `zs stop <instance-id>`
 - Imagem de referencia publicada em `ghcr.io/zeroserver-cc/zsc-app-demo-api:1.0`
 
 ## Regras locais

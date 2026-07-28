@@ -92,7 +92,7 @@ legacy single-image path and is **not reachable from `zs.yaml`**.
 ```yaml
 ai:
   gpu: true    # requires a detected GPU
-  llm: true    # requires LLM capability (GPU with >= 8 GB VRAM, or Apple Silicon with >= 16 GB)
+  llm: true    # requires LLM capability (GPU with >= 8 GB VRAM, or Apple Silicon with >= 8 GB unified memory)
   video: true  # requires video generation capability
   audio: true  # requires audio generation/synthesis capability
   image: true  # requires image generation capability
@@ -107,7 +107,7 @@ matching capability. If no node matches, the deploy fails with a no-eligible-nod
 ```yaml
 placement:
   country: br        # 2-letter ISO 3166-1 alpha-2 code
-  region: sa-east-1  # free-form region string
+  region: RS           # free-form region string, matched against node region codes (e.g. RS, SP)
 ```
 
 Both optional. Unlike `ai`, this is a **soft** preference: the scheduler tries matching nodes
@@ -126,8 +126,9 @@ volumes:
 
 - **Named volume** (`name:/absolute/container/path`): the container path must be absolute and
   the name must be unique per app. Named volumes become first-class platform volumes:
-  they are snapshotted and pinned to a node (see §10). A `:ro` suffix is not supported on
-  named volumes.
+  they are snapshotted and pinned to a node (see §10). A `:ro` suffix on a named volume is
+  silently ignored by the platform — the entry stops being treated as a managed volume and
+  loses snapshot/pinning — so don't use it.
 - **Bind mount** (`/host:/container`): passed through to Docker, not validated, not persistent.
   Avoid it — the host filesystem belongs to a community provider.
 - Quote any entry containing `:` so YAML parses it as a string.
@@ -138,7 +139,7 @@ If an `image` lives in a **private** registry, register a read-only credential o
 
 ```bash
 zs registry login ghcr.io --username your-user   # token asked via hidden prompt
-zs registry list                                  # host and user (never the token)
+zs registry list                                  # host, user and a masked token hint (last 4 chars)
 zs registry logout ghcr.io                        # removes the credential
 ```
 
@@ -155,10 +156,10 @@ Or in the portal under **Settings → Registries**.
 Domains attach to the **application** (not an instance), so they survive redeploys and failover:
 
 ```bash
-zs domain add myapp api.example.com     # returns DNS instructions (TXT verification token)
-zs domain verify myapp api.example.com  # checks the TXT record; routing + TLS go live
-zs domain list myapp
-zs domain remove myapp api.example.com
+zs domain add api.example.com --app my-api   # returns DNS instructions (TXT verification token)
+zs domain verify api.example.com             # checks the TXT record; routing + TLS go live
+zs domain list --app my-api                  # --app is optional here
+zs domain remove api.example.com
 ```
 
 Add the TXT record at your DNS provider, verify, then point a CNAME/A record at the ZS gateway.
@@ -179,9 +180,9 @@ scheduler's placement of your app.
 ```bash
 zs login            # authenticate
 zs deploy           # reads zs.yaml, creates the app (or reuses it by name) and deploys
-zs list             # follow until RUNNING; shows the public URL
-zs logs <app>       # application logs
-zs stop <app>       # stops and frees resources
+zs list             # follow until RUNNING; shows the public URL and the instance ID
+zs logs <instance-id>   # application logs (instance ID from the deploy output or zs list)
+zs stop <instance-id>   # stops and frees resources
 ```
 
 Deploying a single container instead of a full `zs.yaml`? Use the shortcut:
@@ -193,8 +194,9 @@ The portal's deploy wizard accepts the same composition and shows the URL at the
 
 - **1 instance per app**, 1 URL — no replicas or load balancing yet (Phase 2).
 - **No build from source** — bring a prebuilt image (Phase 2 will add builds).
-- **No managed database** — the Postgres service's named volume is not replicated; if the node
-  dies, the data is gone. Don't use it for critical data yet. DBaaS is Phase 2.
+- **No managed database** — the Postgres service's named volume is snapshotted, but data
+  survives only up to the latest snapshot; on failover the app is restored from it and recent
+  writes can be lost. Don't use it for critical data yet. DBaaS is Phase 2.
 - **No hosted registry** — use your own (GHCR, Docker Hub); private images work via
   `zs registry login`.
 
