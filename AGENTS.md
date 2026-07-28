@@ -30,7 +30,7 @@ Aplicacao de exemplo e ponto de partida para Developers na ZeroServer Community 
 
 - Mantenha o exemplo funcional e minimo; o objetivo e onboarding, nao feature creep.
 - A API deve se reconectar ao Postgres de forma resiliente (cold start do banco).
-- O `zs.yaml` e o exemplo canonico do manifesto multi-container; qualquer mudanca no formato deve ser espelhada na documentacao em `documentation/MVP/examples/zs-app-config-reference.md`.
+- O `zs.yaml` e o exemplo canonico do manifesto multi-container; qualquer mudanca no formato deve ser espelhada na referencia canonica em `docs/zs-yaml-reference.md` deste repositorio.
 - Nunca commitar segredos, `.env` nem `zs.yaml` com valores sensiveis.
 - A imagem de exemplo deve permanecer publica para que novos Developers facam deploy sem credenciais.
 

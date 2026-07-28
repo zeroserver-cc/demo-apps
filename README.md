@@ -74,7 +74,9 @@ database connection on startup, so a cold deploy comes up cleanly.
 ## The manifest (`zs.yaml`)
 
 See [`zs.yaml`](./zs.yaml). Field-by-field reference:
-`documentation/MVP/examples/zs-app-config-reference.md`.
+[`docs/zs-yaml-reference.md`](./docs/zs-yaml-reference.md) — the canonical, complete
+manifest reference (services, `ai` requirements, `placement`, volumes, private registries,
+custom domains and deploy flow).
 
 ## MVP limits to know
 
