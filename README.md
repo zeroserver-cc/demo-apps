@@ -58,11 +58,11 @@ proving the API ↔ database connection over the private network.
    ```bash
    zs login
    zs deploy           # reads zs.yaml, creates the app and deploys it
-   zs list             # follow until RUNNING; shows the public URL
+   zs list             # follow until RUNNING; shows the public URL and instance ID
    #   → https://app-xxx.apps.zeroserver.cc
    curl https://app-xxx.apps.zeroserver.cc/
-   zs logs zsc-app-demo
-   zs stop zsc-app-demo
+   zs logs <instance-id>   # instance ID from the deploy output or zs list
+   zs stop <instance-id>
    ```
 
 The `db` service starts before `api` (`dependsOn`), and the API retries its
@@ -74,7 +74,9 @@ database connection on startup, so a cold deploy comes up cleanly.
 ## The manifest (`zs.yaml`)
 
 See [`zs.yaml`](./zs.yaml). Field-by-field reference:
-`documentation/MVP/examples/zs-app-config-reference.md`.
+[`docs/zs-yaml-reference.md`](./docs/zs-yaml-reference.md) — the canonical, complete
+manifest reference (services, `ai` requirements, `placement`, volumes, private registries,
+custom domains and deploy flow).
 
 ## MVP limits to know
 
