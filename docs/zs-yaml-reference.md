@@ -72,6 +72,7 @@ Unknown top-level keys are silently ignored.
 | `ports` | list of strings | no | Container ports the service listens on (e.g. `"3000"`). **Container port only** — there is no `host:container` mapping; the host port is always assigned by the platform. TCP only; UDP is not reachable via `zs.yaml`. Quote values that YAML would read as numbers-with-colons. |
 | `volumes` | list of strings | no | Mounts (see §7). Named volumes persist; bind mounts do not. |
 | `dependsOn` | list of strings | no | Services that must start before this one. Every referenced name must exist in the same app, and dependency **cycles are rejected**. Start order follows the dependency graph. |
+| `command` | list of strings | no | Overrides the image's `CMD` (the argv the container runs, e.g. `["yarn", "worker:prod"]` to run a worker process from the same image). Use it to run an alternative process of the same image as a separate service. |
 | `exposed` | boolean | no | `true` on the service that gets the public URL. **Exactly one** service must be exposed — at least one (backend) and at most one (CLI). |
 
 Validation rules enforced on deploy:
@@ -82,8 +83,9 @@ Validation rules enforced on deploy:
 
 ### What `zs.yaml` does NOT support
 
-There is no `command`, `args`, `restart`, `healthcheck`, `resources`, `labels`, `networks`
-or `build` per service. Put your start command in the image's `ENTRYPOINT`/`CMD`.
+There is no `args`, `restart`, `healthcheck`, `resources`, `labels`, `networks`
+or `build` per service. Start-command overrides are supported via `command`;
+anything else belongs in the image's `ENTRYPOINT`/`CMD`.
 The backend API has an `ApplicationConfig` type with some of these fields, but it belongs to a
 legacy single-image path and is **not reachable from `zs.yaml`**.
 
