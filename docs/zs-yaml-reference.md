@@ -196,6 +196,10 @@ The portal's deploy wizard accepts the same composition and shows the URL at the
 
 - **1 instance per app**, 1 URL — no replicas or load balancing yet (Phase 2).
 - **No build from source** — bring a prebuilt image (Phase 2 will add builds).
+  Build it **multi-arch** (`docker buildx build --platform linux/amd64,linux/arm64
+  -t <image:tag> --push .`): the mesh has amd64 and arm64 nodes and your app can
+  be placed or moved between them; a single-arch image fails to pull on the other
+  architecture.
 - **No managed database** — the Postgres service's named volume is snapshotted, but data
   survives only up to the latest snapshot; on failover the app is restored from it and recent
   writes can be lost. Don't use it for critical data yet. DBaaS is Phase 2.

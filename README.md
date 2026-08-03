@@ -39,11 +39,17 @@ proving the API ↔ database connection over the private network.
    ```
 
 1. **Build and publish the API image** to a registry (GHCR, Docker Hub, …). The ZS
-   runs your prebuilt image; it does not build from source in the MVP:
+   runs your prebuilt image; it does not build from source in the MVP.
+   **Always build multi-arch (`linux/amd64` + `linux/arm64`)**: the mesh has nodes
+   with different CPU architectures and your app may be placed or moved between
+   them. A plain `docker build` publishes only your machine's architecture (e.g.
+   `arm64` on Apple Silicon), and the pull fails on a node with the other one
+   ("no matching manifest" / "exec format error"). Use `buildx`, which pushes a
+   single manifest covering both:
 
    ```bash
-   docker build -t ghcr.io/<your-org>/zsc-app-demo-api:1.0 ./api
-   docker push ghcr.io/<your-org>/zsc-app-demo-api:1.0
+   docker buildx build --platform linux/amd64,linux/arm64 \
+     -t ghcr.io/<your-org>/zsc-app-demo-api:1.0 --push ./api
    ```
 
    Make the image **public** so the ZS can pull it without credentials. (Private
