@@ -8,6 +8,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### Adicionado
+- Orientação de build **multi-arch** (`docker buildx build --platform linux/amd64,linux/arm64 ... --push`) no README e em `docs/zs-yaml-reference.md`: a malha tem nodes amd64 e arm64 e a app pode transitar entre eles; imagem single-arch falha no pull ("no matching manifest" / "exec format error").
 - Referência completa e canônica do manifesto `zs.yaml` em `docs/zs-yaml-reference.md` (em inglês, voltada ao Developer): todos os campos validados de fato pelo CLI/backend — incluindo `placement` (preferência geográfica suave) e o bloco `ai` (requisitos rígidos) — regras de validação, o que o manifesto não suporta, imagens privadas, domínios customizados, volumes/snapshots, fluxo de deploy e limites do MVP.
 - Exemplo comentado da seção `ai` no `zs.yaml` para documentar como apps de IA/ML declaram recursos necessários ao scheduler.
 - Criação do arquivo `CHANGELOG.md` para rastreamento de mudanças.
