@@ -69,6 +69,7 @@ Unknown top-level keys are silently ignored.
 | `name` | string | yes | Service name. Must be **unique within the app**. Becomes the internal hostname — other services connect to it by this name (e.g. `db:5432`). |
 | `image` | string | yes | Registry image, already built (e.g. `postgres:16-alpine`, `ghcr.io/org/app:1.0`). For private images see §8. |
 | `env` | list of strings | no | Environment variables in `KEY=VALUE` format, one per entry. Not validated — malformed entries are passed to Docker as-is. |
+| `envFile` | string or list of strings | no | `.env` file(s) loaded at deploy time (see below). Paths resolve relative to the `zs.yaml` directory. A missing file only emits a **warning** — the deploy continues. |
 | `ports` | list of strings | no | Container ports the service listens on (e.g. `"3000"`). **Container port only** — there is no `host:container` mapping; the host port is always assigned by the platform. TCP only; UDP is not reachable via `zs.yaml`. Quote values that YAML would read as numbers-with-colons. |
 | `volumes` | list of strings | no | Mounts (see §7). Named volumes persist; bind mounts do not. |
 | `dependsOn` | list of strings | no | Services that must start before this one. Every referenced name must exist in the same app, and dependency **cycles are rejected**. Start order follows the dependency graph. |
@@ -80,6 +81,29 @@ Validation rules enforced on deploy:
 - At least one service; service names unique per app.
 - `dependsOn` references must point to declared services; cycles fail with `Dependency cycle detected`.
 - Exactly one `exposed: true` (the "at most one" half is CLI-side only).
+
+### `envFile` — load variables from a `.env` file
+
+```yaml
+services:
+  - name: api
+    image: ghcr.io/org/api:1.0
+    envFile: .env              # or a list: [.env, .env.local]
+    env:
+      - DATABASE_URL=postgres://...   # wins over the same key in .env
+```
+
+- The file uses plain `KEY=VALUE` lines; blank lines and `#` comments are ignored,
+  matching single/double quotes around values are stripped. No variable expansion,
+  no `export ` prefix — malformed lines are reported and skipped.
+- **Precedence:** files in listed order (last one wins), then `env` entries from
+  `zs.yaml` override everything.
+- **Missing file:** a warning is printed (`envFile '.env.local' not found ...`) and
+  the deploy continues without those variables.
+- The merge happens in the CLI at deploy time — the backend receives plain
+  `KEY=VALUE` entries; `envFile` is not part of the stored composition.
+- `.env` files usually carry secrets: keep them out of git (`.gitignore`) exactly
+  like the real `zs.yaml`.
 
 ### What `zs.yaml` does NOT support
 
