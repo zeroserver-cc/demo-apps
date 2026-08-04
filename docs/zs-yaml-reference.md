@@ -13,7 +13,8 @@ marked `exposed: true` gets a unique public HTTPS URL: `https://app-xxx.apps.zer
 - **Prebuilt images only**: services run registry images. The ZSC never builds from source (MVP).
 - **1 instance per app** in the MVP (no replicas/load balancing yet — Phase 2).
 - **Named volumes** give containers persistence, but data is **not replicated** in the MVP.
-  Do not use it for critical data yet. Managed databases are Phase 2.
+  Do not use it for critical data. For a database you can rely on, attach a
+  **Managed Database** instead (see §3).
 
 The `zs` CLI parses and validates `zs.yaml` locally, then sends the composition to the backend
 via GraphQL. The rules below are the user-facing contract; where the CLI and the backend differ,
@@ -59,8 +60,38 @@ services:
 | `services` | list | yes | Non-empty list of services (see §4). No upper limit. |
 | `ai` | mapping | no | AI/ML capability requirements (see §5). |
 | `placement` | mapping | no | Soft geographic preference (see §6). |
+| `database` | string | no | Name of a Managed Database to attach (see below). |
 
 Unknown top-level keys are silently ignored.
+
+### `database` — attaching a Managed Database
+
+```yaml
+app: my-api
+database: my-pg        # name of a Managed Database you own
+
+services:
+  - name: api
+    image: ghcr.io/your-user/my-api:1.0
+    ports:
+      - "3000"
+    exposed: true
+```
+
+Create the database first with `zs db create my-pg --engine postgres` (see
+`zs db --help`; engines: `postgres`, `mysql`), then reference it by name.
+
+- **Colocation is a hard constraint**: an app with `database` set is scheduled onto
+  the node that hosts that database — it overrides `placement` and volume affinity.
+- **Connection env is injected by the platform**: `DATABASE_URL` plus the
+  individual `DATABASE_*` variables (host, port, user, password, name) are set on
+  every service of the app. Platform-injected values **override any `DATABASE_*`
+  entries you declare in `env`** — don't repeat them in the manifest.
+- Databases are **per owner**: you can only attach databases created by your own
+  account, and one database can be shared by several of your apps.
+- There is **no HA or automatic failover** yet: logical dumps run every 6h (7
+  retained) plus physical snapshots, and restore is manual (`zs db restore`).
+  Worst-case data loss (RPO) is 6 hours.
 
 ## 4. Service fields
 
@@ -200,9 +231,11 @@ The portal's deploy wizard accepts the same composition and shows the URL at the
   -t <image:tag> --push .`): the mesh has amd64 and arm64 nodes and your app can
   be placed or moved between them; a single-arch image fails to pull on the other
   architecture.
-- **No managed database** — the Postgres service's named volume is snapshotted, but data
-  survives only up to the latest snapshot; on failover the app is restored from it and recent
-  writes can be lost. Don't use it for critical data yet. DBaaS is Phase 2.
+- **Managed database available (Phase 2, delivered)**: attach one with the
+  app-level `database:` field (see §3). It has scheduled backups (6h RPO) but no
+  HA yet. A Postgres **service** with a named volume still works as the unmanaged
+  alternative — data survives only up to the latest snapshot; on failover the app
+  is restored from it and recent writes can be lost.
 - **No hosted registry** — use your own (GHCR, Docker Hub); private images work via
   `zs registry login`.
 

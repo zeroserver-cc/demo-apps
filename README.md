@@ -74,6 +74,29 @@ proving the API ↔ database connection over the private network.
 The `db` service starts before `api` (`dependsOn`), and the API retries its
 database connection on startup, so a cold deploy comes up cleanly.
 
+### Variant: Managed Database instead of the `db` service
+
+The bundled `zs.yaml` runs Postgres as a regular service (unmanaged: the named
+volume is snapshotted, but there is no replication). If your data matters,
+attach a **Managed Database** instead:
+
+```bash
+zs db create my-pg --engine postgres   # one time; zs db list / connection / restore
+```
+
+Then set the app-level field in `zs.yaml` (see the commented block at the top of
+[`zs.yaml`](./zs.yaml)) and drop the `db` service and the `dependsOn`:
+
+```yaml
+app: zsc-app-demo
+database: my-pg
+```
+
+The platform injects `DATABASE_URL` and the `DATABASE_*` variables into every
+service (they override any `DATABASE_*` in the manifest), and the app is
+scheduled onto the database's node (colocation is a hard constraint). Keep the
+Postgres-as-service setup only as the unmanaged alternative.
+
 > Deploying a single container instead of a full `zs.yaml`? Use the shortcut:
 > `zs deploy <image> --port <port>`.
 
@@ -87,7 +110,7 @@ custom domains and deploy flow).
 ## MVP limits to know
 
 - **1 instance per app**, 1 URL — no replicas or load balancing yet (Phase 2).
-- **Postgres data is not replicated**: the named volume lives on one node; if that
-  node is replaced, the data is lost. Don't use it for critical data yet. Managed
-  Postgres (DBaaS) is Phase 2.
+- **Postgres as a service is not replicated**: the named volume lives on one node; if that
+  node is replaced, the data is lost. Prefer a Managed Database
+  (`database:` in `zs.yaml`) for data that matters.
 - **No build from source**: the ZS runs your prebuilt image. Build is Phase 2.
