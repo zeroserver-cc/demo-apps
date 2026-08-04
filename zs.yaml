@@ -3,6 +3,16 @@
 # Referência completa: docs/zs-yaml-reference.md
 app: zsc-app-demo
 
+# --- Alternativa: Managed Database (recomendado para dados que importam) ---
+# Em vez do serviço `db` abaixo (Postgres unmanaged, volume sem replicação),
+# crie um banco gerenciado com `zs db create my-pg --engine postgres` e anexe-o
+# à app com o campo app-level `database`. A plataforma injeta DATABASE_URL e
+# DATABASE_* em todos os serviços (vencem qualquer DATABASE_* do manifesto) e
+# sobe a app no mesmo node do banco (colocation é constraint dura).
+# Se usar esta variante, remova o serviço `db` e o `dependsOn` abaixo.
+#
+# database: my-pg
+
 # Descomente e ajuste se sua aplicação precisar de recursos de IA/ML no node.
 # Exemplo: app de geração de imagem que exige GPU.
 # ai:
