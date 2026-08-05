@@ -4,6 +4,14 @@
 > This is the canonical, authoritative version of the manifest reference — kept in sync with
 > what the `zs` CLI and the ZSC backend actually accept.
 
+> **`zs.yaml` vs `zs.toml`**: `zs.yaml` is the application manifest this document covers.
+> `zs.toml` is an optional CLI config file that sits next to it; today it only pins the
+> project's session profile (the logged-in account): `session = "<profile-name>"`. It holds
+> no secrets, so it is safe to commit. Session profiles exist since zsc-cli v0.12.1;
+> precedence is `--profile` > `ZS_PROFILE` > `zs.toml` > `zs session use` > `default`. See
+> [Session profiles](https://github.com/zeroserver-cc/zsc-cli#session-profiles-multiple-logins)
+> in the zsc-cli README.
+
 ## 1. Concepts
 
 An **application** on the ZSC is one or more **services** (containers), co-located on the same
