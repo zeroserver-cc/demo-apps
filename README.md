@@ -81,12 +81,15 @@ database connection on startup, so a cold deploy comes up cleanly.
 
 See [`zs.yaml`](./zs.yaml). Field-by-field reference:
 [`docs/zs-yaml-reference.md`](./docs/zs-yaml-reference.md) — the canonical, complete
-manifest reference (services, `ai` requirements, `placement`, volumes, private registries,
+manifest reference (services, `ai` requirements, `placement`, `replicas`, volumes, private registries,
 custom domains and deploy flow).
 
 ## MVP limits to know
 
-- **1 instance per app**, 1 URL — no replicas or load balancing yet (Phase 2).
+- **One instance per app by default**, one URL. Replicas (several instances behind the same
+  URL, with `replicas:` in `zs.yaml` or `zs scale`) are available once the platform has high
+  availability enabled, and need a stateless app. See
+  [`replicas`](./docs/zs-yaml-reference.md#replicas-running-more-than-one-instance).
 - **Postgres data is not replicated**: the named volume lives on one node; if that
   node is replaced, the data is lost. Don't use it for critical data yet. Managed
   Postgres (DBaaS) is Phase 2.
