@@ -19,7 +19,8 @@ community node, on a private network where services reach each other **by name**
 marked `exposed: true` gets a unique public HTTPS URL: `https://app-xxx.apps.zeroserver.cc`.
 
 - **Prebuilt images only**: services run registry images. The ZSC never builds from source (MVP).
-- **1 instance per app** in the MVP (no replicas/load balancing yet — Phase 2).
+- **One instance per app by default.** Set `replicas` to run the app on several nodes behind
+  the same URL (see `replicas` in §3). Replicas need a stateless app.
 - **Named volumes** give containers persistence, but data is **not replicated** in the MVP.
   Do not use it for critical data yet. Managed databases are Phase 2.
 
@@ -67,8 +68,70 @@ services:
 | `services` | list | yes | Non-empty list of services (see §4). No upper limit. |
 | `ai` | mapping | no | AI/ML capability requirements (see §5). |
 | `placement` | mapping | no | Soft geographic preference (see §6). |
+| `replicas` | integer | no | Number of replicas to run behind the app's URL: a whole number, 1 or more (default 1). See the `replicas` section below. |
 
 Unknown top-level keys are silently ignored.
+
+### `replicas`: running more than one instance
+
+> **Available once the platform has high availability enabled.** Until then a request for
+> replicas is accepted, the app keeps running one instance, and the CLI prints a warning
+> that says so.
+
+```yaml
+app: my-api
+replicas: 3
+
+services:
+  - name: api
+    image: ghcr.io/your-user/my-api:1.0
+    ports:
+      - "3000"
+    exposed: true
+```
+
+Each replica is a full copy of your app (every service in the manifest) running on a
+different community node, all behind the same public URL. If a node goes offline, the other
+replicas keep answering and the platform recreates the lost one elsewhere.
+
+Three ways to ask for replicas, all equivalent:
+
+```bash
+# replicas: 3 in zs.yaml, then
+zs deploy
+zs deploy --replicas 3     # the flag overrides the zs.yaml value
+zs scale my-api 3          # changes the count without a deploy
+```
+
+The value is stored with the app: a later `zs deploy` that does not mention replicas keeps
+it. Update the CLI first (`zs upgrade`): older versions ignore unknown manifest keys, so
+`replicas:` would silently have no effect.
+
+What to know before you use it:
+
+- **Your app must be stateless.** Requests are balanced round-robin with **no sticky
+  sessions**, so two requests from the same user can reach different replicas. Keep sessions
+  in a signed cookie or an external database, and do not rely on local files or in-memory
+  state. A WebSocket connection stays on the replica that accepted it.
+- **One replica per node.** Replicas after the first never run on your own nodes, and the
+  platform prefers different providers when the network is large enough.
+- **There is a ceiling.** The platform caps replicas per app (5 in the beta). Asking for more
+  is accepted: the app runs the cap and the CLI shows a warning.
+- **Apps with volumes or a managed database keep one replica.** Volume data lives on a single
+  node and nodes share no private network, so copies would diverge or fail to reach the
+  database. The request is not rejected: the CLI explains why in a warning, and the app
+  scales up once it no longer has them.
+- **Apps deployed before replicas existed** need one `zs deploy` before they can scale; the
+  CLI warns you when that is the case.
+- **Each replica is billed as its own instance.** N replicas cost N times the per-instance
+  hourly price. There is no replica discount in the beta.
+- **Health checks are shallow.** The platform stops sending traffic to a replica whose
+  container is down or whose node disconnects. It does not detect an app that is up but
+  returning errors.
+
+`zs scale` and a deploy that asked for replicas print how many are requested, effective
+(what the platform actually runs) and running right now, plus any warning. Replicas beyond
+the first take a little while to start, so "running" can lag behind "effective" for a moment.
 
 ## 4. Service fields
 
@@ -190,6 +253,7 @@ scheduler's placement of your app.
 ```bash
 zs login            # authenticate
 zs deploy           # reads zs.yaml, creates the app (or reuses it by name) and deploys
+zs scale my-api 3   # optional: run 3 replicas behind the same URL (see `replicas` in §3)
 zs list             # follow until RUNNING; shows the public URL and the instance ID
 zs logs <instance-id>   # application logs (instance ID from the deploy output or zs list)
 zs stop <instance-id>   # stops and frees resources
@@ -202,7 +266,10 @@ The portal's deploy wizard accepts the same composition and shows the URL at the
 
 ## 12. MVP limits
 
-- **1 instance per app**, 1 URL — no replicas or load balancing yet (Phase 2).
+- **One instance per app by default**, one URL. Replicas (several instances behind the same
+  URL) are available once the platform has high availability enabled; they need a stateless
+  app, and apps with volumes or a managed database keep one replica (see `replicas` in §3).
+  Replicas protect you from a node going offline, not from the platform gateway being down.
 - **No build from source** — bring a prebuilt image (Phase 2 will add builds).
   Build it **multi-arch** (`docker buildx build --platform linux/amd64,linux/arm64
   -t <image:tag> --push .`): the mesh has amd64 and arm64 nodes and your app can
